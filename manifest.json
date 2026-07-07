@@ -1,9 +1,9 @@
 {
   "id": "status-words",
   "name": "StatusWords",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "minAppVersion": "1.12.7",
-  "description": "Customizable word and character statistics in the Obsidian status bar.",
+  "description": "Show customizable word and character statistics in the status bar.",
   "author": "zimabx",
   "authorUrl": "https://github.com/zimabx",
   "isDesktopOnly": false
