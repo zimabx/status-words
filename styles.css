@@ -8,9 +8,6 @@
   --clnc-radius: 10px;
   --clnc-border: 1px solid var(--background-modifier-border);
   --clnc-bg: var(--background-secondary);
-  --clnc-bg-primary: var(--background-primary);
-  --clnc-accent-bg: color-mix(in srgb, var(--interactive-accent) 12%, transparent);
-  --clnc-accent-border: color-mix(in srgb, var(--interactive-accent) 45%, transparent);
 
   max-width: 920px;
   padding-bottom: 40px;

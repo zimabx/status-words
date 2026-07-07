@@ -13,7 +13,8 @@ current paragraph, selected text, cursor position, and file information.
 - Display selection line count, cursor position, file name, and file path.
 - Customize the status bar text with templates.
 - Choose from multiple counting modes.
-- Use readable template placeholders, with compatibility for legacy English placeholders.
+- Follow the current Obsidian interface language for English and Simplified Chinese UI text.
+- Use readable localized template placeholders, with compatibility for raw placeholder keys.
 
 ## Installation
 
@@ -39,12 +40,16 @@ After enabling the plugin, the status bar shows statistics for the active note.
 Open the plugin settings to customize the display template, counting mode, and
 thousands separator.
 
+The settings UI follows the current Obsidian interface language. Chinese and
+English template placeholders can both be rendered, so existing templates keep
+working when the interface language changes.
+
 ### Template examples
 
 ```text
-Line: {{currentLineCount}} chars | Note: {{noteCount}} chars
-Note {{noteCount}} chars | {{noteLineCount}} lines
-{{fileName}} | line {{cursorLine}}, column {{cursorColumn}}
+Line: {{Current line count}}  Note: {{Note count}}
+Note {{Note count}} | {{Total lines}} lines
+{{File name}} | Line {{Cursor line}}, column {{Cursor column}}
 ```
 
 ### Available template values

@@ -6,109 +6,218 @@ const {
   TextAreaComponent,
   DropdownComponent,
   ToggleComponent,
+  getLanguage,
 } = require("obsidian");
 
 const DEFAULT_SETTINGS = {
-  displayTemplate: "当前行：{{当前行字数}} 字　全文：{{全文字数}} 字",
+  displayTemplate: "",
   useThousandsSeparator: true,
   countingMode: "obsidian",
 };
 
-const COUNTING_MODE_SAMPLE_TEXT = "中文 ABC 123，空格 🙂";
+const DEFAULT_LOCALE = "en";
 
-const COUNTING_MODES = [
+const I18N = {
+  en: {
+    defaultDisplayTemplate: "Line: {{Current line count}}  Note: {{Note count}}",
+    settingsTitle: "Status bar word count",
+    templateTitle: "Display template",
+    reset: "Reset",
+    preview: "Preview",
+    propertiesTitle: "Available properties",
+    propertiesDescription:
+      "Click a property to insert it at the cursor position in the template above.",
+    examplesTitle: "Template examples",
+    countingModeTitle: "Counting mode",
+    thousandsSeparatorTitle: "Thousands separator",
+    emptyPreview: "Preview is empty",
+    countingModeSampleText: "Text ABC 123, spaces 🙂",
+    countingModePreview: '"{{sample}}" counts as {{count}} characters',
+    fallbackCurrentLineText: "Current line text appears here",
+    fallbackCurrentParagraphText: "Current paragraph text appears here",
+    fallbackSelectionText: "Selected text appears here",
+    fallbackFileName: "Sample note",
+    fallbackFileNameWithExtension: "Sample note.md",
+    fallbackFilePath: "Folder/Sample note.md",
+  },
+  zh: {
+    defaultDisplayTemplate: "当前行：{{当前行字数}} 字　全文：{{全文字数}} 字",
+    settingsTitle: "字数状态栏",
+    templateTitle: "显示模板",
+    reset: "重置",
+    preview: "预览",
+    propertiesTitle: "可用属性",
+    propertiesDescription: "点击属性可插入到上方模板的光标位置。",
+    examplesTitle: "模板示例",
+    countingModeTitle: "统计模式",
+    thousandsSeparatorTitle: "数字千分位分隔",
+    emptyPreview: "预览内容为空",
+    countingModeSampleText: "中文 ABC 123，空格 🙂",
+    countingModePreview: "“{{sample}}” 统计为 {{count}} 字",
+    fallbackCurrentLineText: "这里会显示当前行文本",
+    fallbackCurrentParagraphText: "这里会显示当前段落文本",
+    fallbackSelectionText: "这里会显示选中的文本",
+    fallbackFileName: "示例笔记",
+    fallbackFileNameWithExtension: "示例笔记.md",
+    fallbackFilePath: "文件夹/示例笔记.md",
+  },
+};
+
+const COUNTING_MODE_DEFINITIONS = [
   {
     key: "obsidian",
-    label: "Obsidian 风格",
-    desc: "空格、标点、换行都会计入字符数。",
+    labels: {
+      en: "Obsidian style",
+      zh: "Obsidian 风格",
+    },
+    descriptions: {
+      en: "Spaces, punctuation, and line breaks are included in the count.",
+      zh: "空格、标点、换行都会计入字符数。",
+    },
   },
   {
     key: "noWhitespace",
-    label: "不计空白",
-    desc: "不统计空格、制表符和换行。",
+    labels: {
+      en: "Ignore whitespace",
+      zh: "不计空白",
+    },
+    descriptions: {
+      en: "Spaces, tabs, and line breaks are excluded.",
+      zh: "不统计空格、制表符和换行。",
+    },
   },
   {
     key: "lettersAndNumbers",
-    label: "文字与数字",
-    desc: "只统计文字和数字，不统计空格、标点和符号。",
+    labels: {
+      en: "Letters and numbers",
+      zh: "文字与数字",
+    },
+    descriptions: {
+      en: "Only letters and numbers are counted.",
+      zh: "只统计文字和数字，不统计空格、标点和符号。",
+    },
   },
   {
     key: "grapheme",
-    label: "可见字符",
-    desc: "按肉眼看到的字符统计，emoji 等组合字符通常算 1 个。",
+    labels: {
+      en: "Visible characters",
+      zh: "可见字符",
+    },
+    descriptions: {
+      en: "Counts user-visible characters; emoji sequences usually count as 1.",
+      zh: "按肉眼看到的字符统计，emoji 等组合字符通常算 1 个。",
+    },
   },
 ];
 
-const TEMPLATE_PROPERTIES = [
-  { key: "currentLineCount", label: "当前行字数" },
-  { key: "currentParagraphCount", label: "当前段落字数" },
-  { key: "noteCount", label: "全文字数" },
+const TEMPLATE_PROPERTY_DEFINITIONS = [
+  { key: "currentLineCount", labels: { en: "Current line count", zh: "当前行字数" } },
+  {
+    key: "currentParagraphCount",
+    labels: { en: "Current paragraph count", zh: "当前段落字数" },
+  },
+  { key: "noteCount", labels: { en: "Note count", zh: "全文字数" } },
 
-  { key: "selectionCount", label: "选中文本字数" },
-  { key: "selectionLineCount", label: "选中文本行数" },
-  { key: "selectionText", label: "选中文本" },
+  { key: "selectionCount", labels: { en: "Selection count", zh: "选中文本字数" } },
+  { key: "selectionLineCount", labels: { en: "Selection lines", zh: "选中文本行数" } },
+  { key: "selectionText", labels: { en: "Selection text", zh: "选中文本" } },
 
-  { key: "currentLineText", label: "当前行文本" },
-  { key: "currentParagraphText", label: "当前段落文本" },
+  { key: "currentLineText", labels: { en: "Current line text", zh: "当前行文本" } },
+  {
+    key: "currentParagraphText",
+    labels: { en: "Current paragraph text", zh: "当前段落文本" },
+  },
 
-  { key: "fileName", label: "文件名" },
-  { key: "fileNameWithExtension", label: "完整文件名" },
-  { key: "filePath", label: "文件路径" },
+  { key: "fileName", labels: { en: "File name", zh: "文件名" } },
+  { key: "fileNameWithExtension", labels: { en: "Full file name", zh: "完整文件名" } },
+  { key: "filePath", labels: { en: "File path", zh: "文件路径" } },
 
-  { key: "cursorLine", label: "光标行号" },
-  { key: "cursorColumn", label: "光标列号" },
-  { key: "noteLineCount", label: "总行数" },
+  { key: "cursorLine", labels: { en: "Cursor line", zh: "光标行号" } },
+  { key: "cursorColumn", labels: { en: "Cursor column", zh: "光标列号" } },
+  { key: "noteLineCount", labels: { en: "Total lines", zh: "总行数" } },
 ];
 
-const LEGACY_RAW_PROPERTIES = [
-  { key: "currentLineRawCount", label: "当前行原始字数" },
-  { key: "currentParagraphRawCount", label: "当前段落原始字数" },
-  { key: "noteRawCount", label: "全文原始字数" },
-  { key: "selectionRawCount", label: "选中文本原始字数" },
+const LEGACY_RAW_PROPERTY_DEFINITIONS = [
+  {
+    key: "currentLineRawCount",
+    labels: { en: "Current line raw count", zh: "当前行原始字数" },
+  },
+  {
+    key: "currentParagraphRawCount",
+    labels: { en: "Current paragraph raw count", zh: "当前段落原始字数" },
+  },
+  { key: "noteRawCount", labels: { en: "Note raw count", zh: "全文原始字数" } },
+  {
+    key: "selectionRawCount",
+    labels: { en: "Selection raw count", zh: "选中文本原始字数" },
+  },
 ];
 
 const TEMPLATE_EXAMPLES = [
   {
-    template:
-      "当前行：{{当前行字数}} 字　当前段：{{当前段落字数}} 字　全文：{{全文字数}} 字",
-    preview: "当前行：26 字　当前段：128 字　全文：1,284 字",
+    templates: {
+      en:
+        "Line: {{Current line count}}  Paragraph: {{Current paragraph count}}  Note: {{Note count}}",
+      zh:
+        "当前行：{{当前行字数}} 字　当前段：{{当前段落字数}} 字　全文：{{全文字数}} 字",
+    },
   },
   {
-    template: "选中：{{选中文本字数}} 字　全文：{{全文字数}} 字",
-    preview: "选中：56 字　全文：1,284 字",
+    templates: {
+      en: "Selection: {{Selection count}}  Note: {{Note count}}",
+      zh: "选中：{{选中文本字数}} 字　全文：{{全文字数}} 字",
+    },
   },
   {
-    template: "{{文件名}}｜第 {{光标行号}} 行，第 {{光标列号}} 列",
-    preview: "示例笔记｜第 8 行，第 16 列",
+    templates: {
+      en: "{{File name}} | Line {{Cursor line}}, column {{Cursor column}}",
+      zh: "{{文件名}}｜第 {{光标行号}} 行，第 {{光标列号}} 列",
+    },
   },
   {
-    template: "全文 {{全文字数}} 字｜共 {{总行数}} 行",
-    preview: "全文 1,284 字｜共 120 行",
+    templates: {
+      en: "Note {{Note count}} | {{Total lines}} lines",
+      zh: "全文 {{全文字数}} 字｜共 {{总行数}} 行",
+    },
   },
 ];
 
-const TEMPLATE_LABEL_TO_KEY = Object.fromEntries(
-  [...TEMPLATE_PROPERTIES, ...LEGACY_RAW_PROPERTIES].map((item) => [
-    item.label,
-    item.key,
-  ])
-);
+const TEMPLATE_DEFINITIONS = [
+  ...TEMPLATE_PROPERTY_DEFINITIONS,
+  ...LEGACY_RAW_PROPERTY_DEFINITIONS,
+];
 
-const TEMPLATE_KEY_TO_LABEL = Object.fromEntries(
-  [...TEMPLATE_PROPERTIES, ...LEGACY_RAW_PROPERTIES].map((item) => [
-    item.key,
-    item.label,
-  ])
-);
+const TEMPLATE_LABEL_TO_KEY = TEMPLATE_DEFINITIONS.reduce((labels, item) => {
+  for (const label of Object.values(item.labels)) {
+    labels[label] = item.key;
+  }
+
+  return labels;
+}, {});
+
+const NUMBER_FORMATTER = new Intl.NumberFormat();
+
+const GRAPHEME_SEGMENTER =
+  typeof Intl !== "undefined" && Intl.Segmenter
+    ? new Intl.Segmenter(undefined, { granularity: "grapheme" })
+    : null;
+
+function getPluginLocale() {
+  const language = typeof getLanguage === "function" ? getLanguage() : "";
+
+  return String(language).toLowerCase().startsWith("zh") ? "zh" : "en";
+}
 
 module.exports = class CurrentLineAndNoteCountPlugin extends Plugin {
   async onload() {
+    this.refreshLocale();
     await this.loadSettings();
 
     this.statusBar = this.addStatusBarItem();
     this.statusBar.addClass("current-line-note-count-status");
 
     this.lastCacheKey = "";
+    this.noteLevelCache = null;
 
     this.addSettingTab(new CurrentLineAndNoteCountSettingTab(this.app, this));
 
@@ -136,6 +245,21 @@ module.exports = class CurrentLineAndNoteCountPlugin extends Plugin {
 
     this.registerEvent(
       this.app.workspace.on("editor-change", () => {
+        this.noteLevelCache = null;
+        this.updateStatusBar(true);
+      })
+    );
+
+    this.registerEvent(
+      this.app.vault.on("rename", (file, oldPath) => {
+        if (
+          !this.isActiveFilePath(file?.path) &&
+          !this.isActiveFilePath(oldPath)
+        ) {
+          return;
+        }
+
+        this.resetCache();
         this.updateStatusBar(true);
       })
     );
@@ -150,8 +274,12 @@ module.exports = class CurrentLineAndNoteCountPlugin extends Plugin {
   async loadSettings() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
 
-    const migratedTemplate = this.migrateLegacyTemplateToChinese(
-      this.settings.displayTemplate || DEFAULT_SETTINGS.displayTemplate
+    if (!this.settings.displayTemplate) {
+      this.settings.displayTemplate = this.getDefaultDisplayTemplate();
+    }
+
+    const migratedTemplate = this.migrateLegacyTemplateToLocalized(
+      this.settings.displayTemplate
     );
 
     if (migratedTemplate !== this.settings.displayTemplate) {
@@ -166,8 +294,79 @@ module.exports = class CurrentLineAndNoteCountPlugin extends Plugin {
     this.updateStatusBar(true);
   }
 
+  refreshLocale() {
+    this.locale = getPluginLocale();
+    return this.locale;
+  }
+
+  getLocale() {
+    return this.locale || getPluginLocale();
+  }
+
+  t(key) {
+    const localeText = I18N[this.getLocale()] || I18N[DEFAULT_LOCALE];
+    return localeText[key] ?? I18N[DEFAULT_LOCALE][key] ?? key;
+  }
+
+  formatText(key, values = {}) {
+    return this.t(key).replace(/\{\{\s*([^{}]+?)\s*\}\}/g, (match, rawKey) => {
+      const valueKey = String(rawKey ?? "").trim();
+
+      return valueKey in values ? String(values[valueKey]) : match;
+    });
+  }
+
+  getDefaultDisplayTemplate() {
+    return this.t("defaultDisplayTemplate");
+  }
+
+  getCountingModes() {
+    const locale = this.getLocale();
+
+    return COUNTING_MODE_DEFINITIONS.map((mode) => ({
+      key: mode.key,
+      label: mode.labels[locale] || mode.labels[DEFAULT_LOCALE],
+      desc: mode.descriptions[locale] || mode.descriptions[DEFAULT_LOCALE],
+    }));
+  }
+
+  getTemplateProperties() {
+    const locale = this.getLocale();
+
+    return TEMPLATE_PROPERTY_DEFINITIONS.map((property) => ({
+      key: property.key,
+      label: this.getTemplateLabel(property.key, locale),
+    }));
+  }
+
+  getTemplateExamples() {
+    const locale = this.getLocale();
+
+    return TEMPLATE_EXAMPLES.map((example) => ({
+      template:
+        example.templates[locale] || example.templates[DEFAULT_LOCALE],
+    }));
+  }
+
+  getTemplateLabel(key, locale = this.getLocale()) {
+    const definition = TEMPLATE_DEFINITIONS.find((item) => item.key === key);
+
+    return (
+      definition?.labels[locale] ||
+      definition?.labels[DEFAULT_LOCALE] ||
+      key
+    );
+  }
+
   resetCache() {
     this.lastCacheKey = "";
+    this.noteLevelCache = null;
+  }
+
+  isActiveFilePath(path) {
+    const activeFile = this.app.workspace.getActiveFile();
+
+    return !!path && !!activeFile && activeFile.path === path;
   }
 
   updateStatusBar(force = false) {
@@ -183,7 +382,7 @@ module.exports = class CurrentLineAndNoteCountPlugin extends Plugin {
     }
 
     const template =
-      this.settings.displayTemplate || DEFAULT_SETTINGS.displayTemplate;
+      this.settings.displayTemplate || this.getDefaultDisplayTemplate();
 
     const output = this.renderTemplate(template, data);
 
@@ -212,27 +411,25 @@ module.exports = class CurrentLineAndNoteCountPlugin extends Plugin {
     const editor = view.editor;
     const cursor = editor.getCursor();
 
+    this.refreshNoteLevelCache(editor, view.file);
+
     const currentLineText = editor.getLine(cursor.line) ?? "";
     const currentParagraphText = this.getCurrentParagraphText(editor, cursor.line);
-    const noteText = editor.getValue() ?? "";
     const selectionText = editor.getSelection() ?? "";
 
     const currentLineRawCount = this.countCharacters(currentLineText);
     const currentParagraphRawCount = this.countCharacters(currentParagraphText);
-    const noteRawCount = this.countCharacters(noteText);
     const selectionRawCount = this.countCharacters(selectionText);
-
-    const file = view.file;
 
     return {
       currentLineCount: this.formatCount(currentLineRawCount),
       currentParagraphCount: this.formatCount(currentParagraphRawCount),
-      noteCount: this.formatCount(noteRawCount),
+      noteCount: this.formatCount(this.noteLevelCache.noteRawCount),
       selectionCount: this.formatCount(selectionRawCount),
 
       currentLineRawCount,
       currentParagraphRawCount,
-      noteRawCount,
+      noteRawCount: this.noteLevelCache.noteRawCount,
       selectionRawCount,
 
       selectionLineCount: this.getSelectionLineCount(selectionText),
@@ -241,13 +438,29 @@ module.exports = class CurrentLineAndNoteCountPlugin extends Plugin {
       currentParagraphText,
       selectionText,
 
-      fileName: file?.basename ?? "",
-      fileNameWithExtension: file?.name ?? "",
-      filePath: file?.path ?? "",
+      fileName: this.noteLevelCache.fileName,
+      fileNameWithExtension: this.noteLevelCache.fileNameWithExtension,
+      filePath: this.noteLevelCache.filePath,
 
       cursorLine: cursor.line + 1,
       cursorColumn: cursor.ch + 1,
+      noteLineCount: this.noteLevelCache.noteLineCount,
+    };
+  }
+
+  refreshNoteLevelCache(editor, file) {
+    if (this.noteLevelCache) {
+      return;
+    }
+
+    const noteText = editor.getValue() ?? "";
+
+    this.noteLevelCache = {
+      noteRawCount: this.countCharacters(noteText),
       noteLineCount: editor.lineCount(),
+      fileName: file?.basename ?? "",
+      fileNameWithExtension: file?.name ?? "",
+      filePath: file?.path ?? "",
     };
   }
 
@@ -265,13 +478,13 @@ module.exports = class CurrentLineAndNoteCountPlugin extends Plugin {
 
       selectionLineCount: 2,
 
-      currentLineText: "这里会显示当前行文本",
-      currentParagraphText: "这里会显示当前段落文本",
-      selectionText: "这里会显示选中的文本",
+      currentLineText: this.t("fallbackCurrentLineText"),
+      currentParagraphText: this.t("fallbackCurrentParagraphText"),
+      selectionText: this.t("fallbackSelectionText"),
 
-      fileName: "示例笔记",
-      fileNameWithExtension: "示例笔记.md",
-      filePath: "文件夹/示例笔记.md",
+      fileName: this.t("fallbackFileName"),
+      fileNameWithExtension: this.t("fallbackFileNameWithExtension"),
+      filePath: this.t("fallbackFilePath"),
 
       cursorLine: 8,
       cursorColumn: 16,
@@ -336,14 +549,14 @@ module.exports = class CurrentLineAndNoteCountPlugin extends Plugin {
     return TEMPLATE_LABEL_TO_KEY[key] || key;
   }
 
-  migrateLegacyTemplateToChinese(template) {
+  migrateLegacyTemplateToLocalized(template) {
     return String(template ?? "").replace(
       /\{\{\s*([^{}]+?)\s*\}\}/g,
       (match, rawKey) => {
         const key = String(rawKey ?? "").trim();
-        const label = TEMPLATE_KEY_TO_LABEL[key];
+        const label = this.getTemplateLabel(key);
 
-        if (!label) {
+        if (label === key) {
           return match;
         }
 
@@ -389,12 +602,14 @@ module.exports = class CurrentLineAndNoteCountPlugin extends Plugin {
   }
 
   countGraphemes(text) {
-    if (typeof Intl !== "undefined" && Intl.Segmenter) {
-      const segmenter = new Intl.Segmenter(undefined, {
-        granularity: "grapheme",
-      });
+    if (GRAPHEME_SEGMENTER) {
+      let count = 0;
 
-      return Array.from(segmenter.segment(text)).length;
+      for (const _ of GRAPHEME_SEGMENTER.segment(text)) {
+        count++;
+      }
+
+      return count;
     }
 
     return Array.from(text).length;
@@ -405,7 +620,7 @@ module.exports = class CurrentLineAndNoteCountPlugin extends Plugin {
       return String(num);
     }
 
-    return new Intl.NumberFormat().format(num);
+    return NUMBER_FORMATTER.format(num);
   }
 };
 
@@ -418,16 +633,22 @@ class CurrentLineAndNoteCountSettingTab extends PluginSettingTab {
     this.templateInputEl = null;
     this.previewValueEl = null;
     this.countingModePreviewEl = null;
+    this.exampleButtons = null;
+    this.saveTemplateTimeoutId = null;
+    this.templateSaveVersion = 0;
+    this.templateSavePromise = Promise.resolve();
   }
 
   display() {
+    this.plugin.refreshLocale();
+
     const { containerEl } = this;
 
     containerEl.empty();
     containerEl.addClass("current-line-note-count-settings");
 
     containerEl.createEl("h2", {
-      text: "字数状态栏",
+      text: this.plugin.t("settingsTitle"),
       cls: "current-line-note-count-title",
     });
 
@@ -441,9 +662,21 @@ class CurrentLineAndNoteCountSettingTab extends PluginSettingTab {
     this.updateCountingModePreview();
   }
 
+  hide() {
+    const pendingSave = this.saveTemplateTimeoutId
+      ? this.flushTemplateSave()
+      : null;
+
+    if (super.hide) {
+      super.hide();
+    }
+
+    return pendingSave;
+  }
+
   createTemplateCard(containerEl) {
     const cardEl = containerEl.createDiv({
-      cls: "current-line-note-count-card current-line-note-count-template-card",
+      cls: "current-line-note-count-card",
     });
 
     const headerEl = cardEl.createDiv({
@@ -451,7 +684,7 @@ class CurrentLineAndNoteCountSettingTab extends PluginSettingTab {
     });
 
     headerEl.createEl("h3", {
-      text: "显示模板",
+      text: this.plugin.t("templateTitle"),
       cls: "current-line-note-count-card-title",
     });
 
@@ -462,13 +695,15 @@ class CurrentLineAndNoteCountSettingTab extends PluginSettingTab {
     const resetButton = new ButtonComponent(resetWrapEl);
 
     resetButton
-      .setButtonText("重置")
+      .setButtonText(this.plugin.t("reset"))
       .onClick(async () => {
-        this.plugin.settings.displayTemplate = DEFAULT_SETTINGS.displayTemplate;
-        await this.plugin.saveSettings();
+        const defaultTemplate = this.plugin.getDefaultDisplayTemplate();
+
+        this.cancelPendingTemplateSave();
+        await this.queueTemplateSave(defaultTemplate);
 
         if (this.templateTextAreaComponent) {
-          this.templateTextAreaComponent.setValue(DEFAULT_SETTINGS.displayTemplate);
+          this.templateTextAreaComponent.setValue(defaultTemplate);
         }
 
         this.syncTemplateInputEl();
@@ -488,19 +723,17 @@ class CurrentLineAndNoteCountSettingTab extends PluginSettingTab {
     this.templateTextAreaComponent = new TextAreaComponent(textAreaWrapEl);
 
     this.templateTextAreaComponent
-      .setPlaceholder(DEFAULT_SETTINGS.displayTemplate)
+      .setPlaceholder(this.plugin.getDefaultDisplayTemplate())
       .setValue(
-        this.plugin.settings.displayTemplate || DEFAULT_SETTINGS.displayTemplate
+        this.plugin.settings.displayTemplate ||
+          this.plugin.getDefaultDisplayTemplate()
       )
-      .onChange(async (value) => {
-        this.plugin.settings.displayTemplate =
-          value.trim() || DEFAULT_SETTINGS.displayTemplate;
-
-        await this.plugin.saveSettings();
-
+      .onChange((value) => {
         this.syncTemplateInputEl();
         this.autoResizeTextarea();
         this.updatePreview();
+
+        this.scheduleTemplateSave(value);
       });
 
     this.syncTemplateInputEl();
@@ -515,7 +748,7 @@ class CurrentLineAndNoteCountSettingTab extends PluginSettingTab {
     });
 
     previewEl.createSpan({
-      text: "预览",
+      text: this.plugin.t("preview"),
       cls: "current-line-note-count-compact-preview-label",
     });
 
@@ -536,12 +769,12 @@ class CurrentLineAndNoteCountSettingTab extends PluginSettingTab {
     });
 
     cardEl.createEl("h3", {
-      text: "可用属性",
+      text: this.plugin.t("propertiesTitle"),
       cls: "current-line-note-count-card-title",
     });
 
     cardEl.createEl("p", {
-      text: "点击属性可插入到上方模板的光标位置。",
+      text: this.plugin.t("propertiesDescription"),
       cls: "current-line-note-count-section-desc",
     });
 
@@ -549,7 +782,7 @@ class CurrentLineAndNoteCountSettingTab extends PluginSettingTab {
       cls: "current-line-note-count-property-flow",
     });
 
-    for (const property of TEMPLATE_PROPERTIES) {
+    for (const property of this.plugin.getTemplateProperties()) {
       const buttonWrapEl = flowEl.createDiv({
         cls: "current-line-note-count-property-button-wrap",
       });
@@ -566,11 +799,11 @@ class CurrentLineAndNoteCountSettingTab extends PluginSettingTab {
 
   createExamplesCard(containerEl) {
     const cardEl = containerEl.createDiv({
-      cls: "current-line-note-count-card current-line-note-count-examples-card",
+      cls: "current-line-note-count-card",
     });
 
     cardEl.createEl("h3", {
-      text: "模板示例",
+      text: this.plugin.t("examplesTitle"),
       cls: "current-line-note-count-card-title",
     });
 
@@ -578,33 +811,37 @@ class CurrentLineAndNoteCountSettingTab extends PluginSettingTab {
       cls: "current-line-note-count-example-list",
     });
 
-    for (const example of TEMPLATE_EXAMPLES) {
+    this.exampleButtons = [];
+
+    for (const example of this.plugin.getTemplateExamples()) {
       const buttonWrapEl = listEl.createDiv({
         cls: "current-line-note-count-example-button-wrap",
       });
 
       const button = new ButtonComponent(buttonWrapEl);
 
-      button
-        .setButtonText(example.preview)
-        .onClick(async () => {
-          this.plugin.settings.displayTemplate = example.template;
-          await this.plugin.saveSettings();
+      button.onClick(async () => {
+        this.cancelPendingTemplateSave();
+        await this.queueTemplateSave(example.template);
 
-          if (this.templateTextAreaComponent) {
-            this.templateTextAreaComponent.setValue(example.template);
-          }
+        if (this.templateTextAreaComponent) {
+          this.templateTextAreaComponent.setValue(example.template);
+        }
 
-          this.syncTemplateInputEl();
-          this.autoResizeTextarea();
+        this.syncTemplateInputEl();
+        this.autoResizeTextarea();
 
-          if (this.templateInputEl) {
-            this.templateInputEl.focus();
-          }
+        if (this.templateInputEl) {
+          this.templateInputEl.focus();
+        }
 
-          this.updatePreview();
-        });
+        this.updatePreview();
+      });
+
+      this.exampleButtons.push({ button, template: example.template });
     }
+
+    this.updateExamplePreviews();
   }
 
   createCountingModeCard(containerEl) {
@@ -613,7 +850,7 @@ class CurrentLineAndNoteCountSettingTab extends PluginSettingTab {
     });
 
     cardEl.createEl("h3", {
-      text: "统计模式",
+      text: this.plugin.t("countingModeTitle"),
       cls: "current-line-note-count-card-title",
     });
 
@@ -630,8 +867,9 @@ class CurrentLineAndNoteCountSettingTab extends PluginSettingTab {
     });
 
     const dropdown = new DropdownComponent(dropdownWrapEl);
+    const countingModes = this.plugin.getCountingModes();
 
-    for (const mode of COUNTING_MODES) {
+    for (const mode of countingModes) {
       dropdown.addOption(mode.key, mode.label);
     }
 
@@ -640,7 +878,7 @@ class CurrentLineAndNoteCountSettingTab extends PluginSettingTab {
     );
 
     const updateModeDesc = () => {
-      const currentMode = COUNTING_MODES.find(
+      const currentMode = countingModes.find(
         (mode) => mode.key === dropdown.getValue()
       );
 
@@ -656,6 +894,7 @@ class CurrentLineAndNoteCountSettingTab extends PluginSettingTab {
       updateModeDesc();
       this.updatePreview();
       this.updateCountingModePreview();
+      this.updateExamplePreviews();
     });
 
     const previewEl = cardEl.createDiv({
@@ -663,7 +902,7 @@ class CurrentLineAndNoteCountSettingTab extends PluginSettingTab {
     });
 
     previewEl.createSpan({
-      text: "预览",
+      text: this.plugin.t("preview"),
       cls: "current-line-note-count-mode-preview-label",
     });
 
@@ -678,7 +917,7 @@ class CurrentLineAndNoteCountSettingTab extends PluginSettingTab {
     });
 
     cardEl.createEl("h3", {
-      text: "数字千分位分隔",
+      text: this.plugin.t("thousandsSeparatorTitle"),
       cls: "current-line-note-count-card-title",
     });
 
@@ -696,6 +935,7 @@ class CurrentLineAndNoteCountSettingTab extends PluginSettingTab {
 
         this.updatePreview();
         this.updateCountingModePreview();
+        this.updateExamplePreviews();
       });
   }
 
@@ -707,12 +947,57 @@ class CurrentLineAndNoteCountSettingTab extends PluginSettingTab {
 
     this.templateInputEl =
       this.templateInputEl ||
-      document.querySelector(
+      this.containerEl.querySelector(
         ".current-line-note-count-template-textarea-wrap textarea"
       );
   }
 
+  cancelPendingTemplateSave() {
+    if (this.saveTemplateTimeoutId) {
+      window.clearTimeout(this.saveTemplateTimeoutId);
+      this.saveTemplateTimeoutId = null;
+    }
+  }
+
+  scheduleTemplateSave(value) {
+    this.cancelPendingTemplateSave();
+
+    this.saveTemplateTimeoutId = window.setTimeout(() => {
+      this.saveTemplateTimeoutId = null;
+      void this.queueTemplateSave(value);
+    }, 400);
+  }
+
+  flushTemplateSave() {
+    this.cancelPendingTemplateSave();
+
+    const value =
+      this.templateInputEl?.value ?? this.plugin.settings.displayTemplate;
+
+    return this.queueTemplateSave(value);
+  }
+
+  queueTemplateSave(value) {
+    const normalizedValue =
+      String(value ?? "").trim() || this.plugin.getDefaultDisplayTemplate();
+    const saveVersion = ++this.templateSaveVersion;
+
+    this.plugin.settings.displayTemplate = normalizedValue;
+    this.templateSavePromise = this.templateSavePromise
+      .catch(() => {})
+      .then(async () => {
+        if (saveVersion !== this.templateSaveVersion) {
+          return;
+        }
+
+        await this.plugin.saveSettings();
+      });
+
+    return this.templateSavePromise;
+  }
+
   async insertPropertyToTemplate(label) {
+    this.cancelPendingTemplateSave();
     this.syncTemplateInputEl();
 
     if (!this.templateInputEl) {
@@ -742,10 +1027,7 @@ class CurrentLineAndNoteCountSettingTab extends PluginSettingTab {
     inputEl.setSelectionRange(cursorPosition, cursorPosition);
     inputEl.focus();
 
-    this.plugin.settings.displayTemplate =
-      inputEl.value.trim() || DEFAULT_SETTINGS.displayTemplate;
-
-    await this.plugin.saveSettings();
+    await this.queueTemplateSave(inputEl.value);
 
     if (this.templateTextAreaComponent) {
       this.templateTextAreaComponent.setValue(inputEl.value);
@@ -797,12 +1079,24 @@ class CurrentLineAndNoteCountSettingTab extends PluginSettingTab {
     const template =
       this.templateInputEl?.value.trim() ||
       this.plugin.settings.displayTemplate ||
-      DEFAULT_SETTINGS.displayTemplate;
+      this.plugin.getDefaultDisplayTemplate();
 
     const data = this.plugin.getTemplateData(true);
     const output = this.plugin.renderTemplate(template, data);
 
-    this.previewValueEl.setText(output || "预览内容为空");
+    this.previewValueEl.setText(output || this.plugin.t("emptyPreview"));
+  }
+
+  updateExamplePreviews() {
+    if (!this.exampleButtons) {
+      return;
+    }
+
+    const fallbackData = this.plugin.getFallbackTemplateData();
+
+    for (const { button, template } of this.exampleButtons) {
+      button.setButtonText(this.plugin.renderTemplate(template, fallbackData));
+    }
   }
 
   updateCountingModePreview() {
@@ -810,11 +1104,15 @@ class CurrentLineAndNoteCountSettingTab extends PluginSettingTab {
       return;
     }
 
-    const count = this.plugin.countCharacters(COUNTING_MODE_SAMPLE_TEXT);
+    const sampleText = this.plugin.t("countingModeSampleText");
+    const count = this.plugin.countCharacters(sampleText);
     const formattedCount = this.plugin.formatCount(count);
 
     this.countingModePreviewEl.setText(
-      `“${COUNTING_MODE_SAMPLE_TEXT}” 统计为 ${formattedCount} 字`
+      this.plugin.formatText("countingModePreview", {
+        sample: sampleText,
+        count: formattedCount,
+      })
     );
   }
 }
