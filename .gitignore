@@ -1,0 +1,5 @@
+data.json
+node_modules/
+.obsidian/
+.DS_Store
+Thumbs.db

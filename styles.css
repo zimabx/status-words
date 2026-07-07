@@ -1,0 +1,235 @@
+.current-line-note-count-status {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* 设置页整体 */
+.current-line-note-count-settings {
+  --clnc-radius: 10px;
+  --clnc-border: 1px solid var(--background-modifier-border);
+  --clnc-bg: var(--background-secondary);
+  --clnc-bg-primary: var(--background-primary);
+  --clnc-accent-bg: color-mix(in srgb, var(--interactive-accent) 12%, transparent);
+  --clnc-accent-border: color-mix(in srgb, var(--interactive-accent) 45%, transparent);
+
+  max-width: 920px;
+  padding-bottom: 40px;
+}
+
+/* 页面标题 */
+.current-line-note-count-title {
+  margin: 0 0 18px;
+  font-size: 26px;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+}
+
+/* 通用卡片 */
+.current-line-note-count-card {
+  margin-bottom: 14px;
+  padding: 20px 24px;
+  border: var(--clnc-border);
+  border-radius: var(--clnc-radius);
+  background: var(--clnc-bg);
+  box-shadow: none;
+}
+
+/* 卡片标题行 */
+.current-line-note-count-card-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 32px;
+  margin-bottom: 14px;
+}
+
+.current-line-note-count-settings h3.current-line-note-count-card-title {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+  margin: 0;
+  padding: 0;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* 普通说明 */
+.current-line-note-count-section-desc {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Obsidian ButtonComponent：重置按钮 */
+.current-line-note-count-reset-button-wrap button {
+  height: 30px;
+  min-height: 30px;
+  padding: 0 12px;
+  line-height: 1;
+}
+
+/* TextAreaComponent：模板输入区域 */
+.current-line-note-count-template-textarea-wrap textarea {
+  display: block;
+  width: 100%;
+  min-height: calc(1.6em * 3 + 22px);
+  max-height: calc(1.6em * 5 + 22px);
+  resize: none;
+  font-family: var(--font-monospace);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* 紧凑预览 */
+.current-line-note-count-compact-preview {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 0 2px;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.current-line-note-count-compact-preview-label {
+  flex: 0 0 auto;
+  color: var(--text-faint);
+  font-weight: 600;
+}
+
+.current-line-note-count-compact-preview-value {
+  min-width: 0;
+  color: var(--text-normal);
+  word-break: break-word;
+}
+
+/* 可用属性 */
+.current-line-note-count-property-flow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.current-line-note-count-property-button-wrap button {
+  max-width: 160px;
+  min-height: 34px;
+  padding: 6px 10px;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* 模板示例 */
+.current-line-note-count-example-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.current-line-note-count-example-button-wrap button {
+  width: 100%;
+  min-height: 34px;
+  padding: 8px 10px;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: center;
+  white-space: normal;
+}
+
+.current-line-note-count-example-button-wrap button:hover {
+  color: var(--text-normal);
+}
+
+/* 统计模式 */
+.current-line-note-count-mode-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.current-line-note-count-mode-control-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 240px) minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+}
+
+.current-line-note-count-dropdown-wrap {
+  min-width: 0;
+}
+
+/* DropdownComponent：尽量保留 Obsidian 原生样式 */
+.current-line-note-count-dropdown-wrap select {
+  width: 100%;
+  max-width: 100%;
+}
+
+.current-line-note-count-mode-desc-inline {
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* 统计模式预览 */
+.current-line-note-count-mode-preview {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 0 2px;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.current-line-note-count-mode-preview-label {
+  flex: 0 0 auto;
+  color: var(--text-faint);
+  font-weight: 600;
+}
+
+.current-line-note-count-mode-preview-value {
+  min-width: 0;
+  color: var(--text-normal);
+  word-break: break-word;
+}
+
+/* 配置行 */
+.current-line-note-count-setting-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.current-line-note-count-simple-row {
+  min-height: 64px;
+}
+
+.current-line-note-count-toggle-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+@media (max-width: 700px) {
+  .current-line-note-count-card {
+    padding: 16px;
+  }
+
+  .current-line-note-count-property-button-wrap button {
+    max-width: 100%;
+  }
+
+  .current-line-note-count-mode-control-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
