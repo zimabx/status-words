@@ -1,6 +1,6 @@
 # StatusWords
 
-[English](README.md)
+[English](https://github.com/zimabx/status-words/blob/main/README.md)
 
 在 Obsidian 状态栏中显示可自定义的单词和字符统计。
 
