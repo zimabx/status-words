@@ -1,6 +1,6 @@
 # StatusWords
 
-[Simplified Chinese](README.zh-CN.md)
+[简体中文](https://github.com/zimabx/status-words/blob/main/README.zh-CN.md)
 
 Show customizable word and character statistics in the Obsidian status bar.
 
