@@ -22,7 +22,7 @@ current paragraph, selected text, cursor position, and file information.
 
 1. Open Obsidian settings.
 2. Go to **Community plugins**.
-3. Search for **StatusWords**.
+3. Search for **[StatusWords](https://community.obsidian.md/plugins/status-words)**.
 4. Install and enable the plugin.
 
 ### Manual installation
